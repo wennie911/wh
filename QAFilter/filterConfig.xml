@@ -1,0 +1,6 @@
+<root>
+	<layer id="1" leakList="M" initiative="" defDenyQuestion="" defQuestion=""/>
+	<layer id="2" leakList="B|C|D|I" initiative="0" defDenyQuestion="结束失败" defQuestion="兜底一"/>
+	<layer id="3" leakList="C|D|I" initiative="0" defDenyQuestion="结束失败" defQuestion="兜底二"/>
+	<layer id="4" leakList="C|D" initiative="0" defDenyQuestion="邀约失败" defQuestion="结束成功"/>
+</root>

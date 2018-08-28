@@ -11,8 +11,21 @@ CFilterProcess::~CFilterProcess()
 
 bool CFilterProcess::init()
 {
+	//读取nluso配置文件
+	string sDllPath;
+	string sDataPath;
+	int iLogLevle=0;
+	
+	if(!readNLUSoConfig("./nlusoConfig.xml", sDllPath, sDataPath, iLogLevle))
+	{
+		return false;
+	}
+	if(sDllPath.empty()||sDataPath.empty()|| iLogLevle==0)
+	{
+		return false;
+	}
 	//打开nlu
-	if(!m_so_nlu.LoadSo())
+	if(!m_so_nlu.LoadSo(sDllPath, sDataPath, iLogLevle))
 		return false;
 	//读取过滤器配置文件
 	if(!readFilterConfig("./filterConfig.xml"))
@@ -110,6 +123,34 @@ bool CFilterProcess::readFilterConfig(string sXMLPath)
 		pLayer = pLayer->NextSiblingElement();
 	}
 	return !m_vecLoginLayer.empty();
+}
+
+bool CFilterProcess::readNLUSoConfig(string sXMLPath, string &sDllPath, string &sDataPath, int &iLogLevle)
+{
+	//解析xml
+	TiXmlDocument doc;
+
+	if(!doc.LoadFile(sXMLPath.c_str()))
+		return false;
+	
+	
+	//根节点
+	TiXmlElement *pRootElement = doc.RootElement();
+	if(pRootElement == NULL)
+		return false;
+
+	//nluso子节点
+	TiXmlElement *nluso = pRootElement->FirstChildElement();
+
+	string sT;
+	sT = getXmlAttribute(nluso,"soPath");
+	sDllPath = sT;
+	sT = getXmlAttribute(nluso,"dataPath");
+	sDataPath = sT;
+	sT = getXmlAttribute(nluso,"logLevel");
+	iLogLevle = atoi(sT.c_str());
+
+	return true;
 }
 
 string CFilterProcess::getXmlAttribute(TiXmlElement *pNode, const string sAttributeName)
@@ -284,12 +325,14 @@ bool CFilterProcess::layerProcess()
 					if(sAnswer.length()==0)
 						return false;
 					sAudio = getLastAudio(oneFilterPtr->getLayerId());
-					setRetAnswer(sAnswer, sAudio, 0);
+					setRetAnswer(sAnswer, sAudio, 0, iterOtherQA->sQuestion, iterOtherQA->sMatchedQuestion, 
+						iterOtherQA->sQuestionPinYin,iterOtherQA->sType);
 					setLayerAnswerAndAudio(oneFilterPtr->getLayerId(), sAnswer, sAudio);
 					return true;
 				}
 				sAudio = oneFilterPtr->getAudio();
-				setRetAnswer(sAnswer, sAudio, 0);
+				setRetAnswer(sAnswer, sAudio, 0, iterOtherQA->sQuestion, iterOtherQA->sMatchedQuestion, 
+					iterOtherQA->sQuestionPinYin, iterOtherQA->sType);
 				setLayerAnswerAndAudio(oneFilterPtr->getLayerId(), sAnswer, sAudio);
 				return true;
 			}
@@ -302,6 +345,7 @@ bool CFilterProcess::layerProcess()
 				setLayerAnswerAndAudio(oneFilterPtr->getLayerId(), iterOtherQA->sAnswer, iterOtherQA->sAudio);
 				return true;
 			}
+		}
 		
 		//如果qalist有否定标志，判断过滤层是否有否定缺省回答的q
 		string sDefDenyQuestion = oneFilterPtr->getDenyQuestion();
@@ -316,15 +360,17 @@ bool CFilterProcess::layerProcess()
 				if(!m_so_nlu.getAnswer(sDefDenyQuestion, vecNLUQAListT))
 					return false;
 				iterQA=vecNLUQAListT.begin();
-				
-				setRetAnswer(iterQA->sAnswer, iterQA->sAudio, iterQA->iIsEnd);
+					
+				setRetAnswer(iterQA->sAnswer, iterQA->sAudio, iterQA->iIsEnd, iterOtherQA->sQuestion, iterOtherQA->sMatchedQuestion, 
+					iterOtherQA->sQuestionPinYin,iterOtherQA->sType);
 				setLayerAnswerAndAudio(oneFilterPtr->getLayerId(), iterQA->sAnswer, iterQA->sAudio);
 				oneFilterPtr->setUsed(true);
 				return true;
 			}
 		}
-		}
+		
 		//过滤层是否有肯定缺省回答的q
+		vector<struNLUQA>::iterator iterOtherQA = vecOtherQAList.begin();
 		string sDefQuestion = oneFilterPtr->getDefQuestion();
 		if(sDefQuestion.empty())
 			return false;
@@ -336,7 +382,8 @@ bool CFilterProcess::layerProcess()
 			return false;
 		iterQA=vecNLUQAListT.begin();
 		
-		setRetAnswer(iterQA->sAnswer, iterQA->sAudio, iterQA->iIsEnd);
+		setRetAnswer(iterQA->sAnswer, iterQA->sAudio, iterQA->iIsEnd, iterOtherQA->sQuestion, iterOtherQA->sMatchedQuestion, 
+			iterOtherQA->sQuestionPinYin,iterOtherQA->sType);
 		setLayerAnswerAndAudio(oneFilterPtr->getLayerId(), iterQA->sAnswer, iterQA->sAudio);
 		oneFilterPtr->setUsed(true);
 		return true;
@@ -355,14 +402,14 @@ void CFilterProcess::setRetAnswer(struNLUQA & oneQA)
 	m_retQA.iIsEnd = oneQA.iIsEnd;
 }
 
-void CFilterProcess::setRetAnswer(string &sAnswer, string &sAudio, int iIsEnd)
+void CFilterProcess::setRetAnswer(string &sAnswer, string &sAudio, int iIsEnd, string &sQuestion, string &sMatchedQuestion, string &sQuestionPinYin, string &sType)
 {
 	m_retQA.sAnswer = sAnswer;
 	m_retQA.sAudio = sAudio;
-	m_retQA.sMatchedQuestion = "";
-	m_retQA.sQuestion = "";
-	m_retQA.sQuestionPinYin = "";
-	m_retQA.sType = "";
+	m_retQA.sMatchedQuestion = sMatchedQuestion;
+	m_retQA.sQuestion = sQuestion;
+	m_retQA.sQuestionPinYin = sQuestionPinYin;
+	m_retQA.sType = sType;
 	m_retQA.iIsBreak = 1;
 	m_retQA.iIsEnd = iIsEnd;
 }

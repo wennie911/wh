@@ -23,7 +23,7 @@ class CCallNlUSo
 		~CCallNlUSo();
 	public:
 		//打开nlu.so
-		bool LoadSo();
+		bool LoadSo(string &sDllPath, string &sDataPath, int iLogLevel);
 		//返回nlu的调用结构
 		bool getAnswer(string &sInSentence, vector<struNLUQA> &vecNluQAList);
 	private:

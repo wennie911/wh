@@ -15,8 +15,8 @@ nlu_log_level func_nlu_loglevel;
 
 CCallNlUSo::CCallNlUSo()
 {
-	m_sDLLPath = "/usr/local/src/ai/libnlu.so";
-	m_sDataPath = "/usr/local/src/ai/dataLibs/";
+	m_sDLLPath = "";
+	m_sDataPath = "";
 	m_iLogLevel = 3;
 
 }
@@ -26,9 +26,13 @@ CCallNlUSo::~CCallNlUSo()
 	CloseSo();
 }
 
-bool CCallNlUSo::LoadSo()
+bool CCallNlUSo::LoadSo(string &sDllPath, string &sDataPath, int iLogLevel)
 {
-	if(m_sDLLPath.empty())
+	m_sDLLPath = sDllPath;
+	m_sDataPath = sDataPath;
+	m_iLogLevel = iLogLevel;
+	
+	if(m_sDLLPath.empty() || m_sDataPath.empty() || iLogLevel ==0)
 		return false;
 	
 	m_handle = dlopen(m_sDLLPath.c_str(), RTLD_NOW);

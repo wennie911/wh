@@ -33,6 +33,7 @@ class CFilterProcess
 
 		//∂¡»°π˝¬À∆˜≈‰÷√xml
 		bool readFilterConfig(string sXMLPath);
+		bool readNLUSoConfig(string sXMLPath, string &sDllPath, string &sDataPath, int &iLogLevle);
 		string getXmlAttribute(TiXmlElement *pNode, const string sAttributeName);
 
 		CLogicLayer * getLayer();
@@ -41,7 +42,7 @@ class CFilterProcess
 		void setLayerAnswerAndAudio(int iLayerId,string &sAnswer, string &sAudio);
 
 		void setRetAnswer(struNLUQA &oneQA);
-		void setRetAnswer(string &sAnswer, string &sAudio, int iIsEnd);
+		void setRetAnswer(string &sAnswer, string &sAudio, int iIsEnd, string &sQuestion, string &sMatchedQuestion, string &sQuestionPinYin, string &sType);
 
 		void initQAStru(struNLUQA &oneQA);
 

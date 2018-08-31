@@ -27,9 +27,11 @@ class CFilterProcess
 		CCallNlUSo m_so_nlu;
 		vector<CLogicLayer> m_vecLoginLayer; 
 		CNLUQAList m_nluQaList;
-		int m_currentLayerId;
+		int m_iCurrentLayerId;
 		bool m_bSessionEnd;
 		struNLUQA m_retQA;
+		int m_iDialogueCount;
+		int m_iTotalLayer;
 
 		//¶ÁÈ¡¹ıÂËÆ÷ÅäÖÃxml
 		bool readFilterConfig(string sXMLPath);

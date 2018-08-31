@@ -3,6 +3,8 @@
 
 CFilterProcess::CFilterProcess()
 {
+	m_iDialogueCount=0;
+	m_iCurrentLayerId=0;
 }
 
 CFilterProcess::~CFilterProcess()
@@ -43,6 +45,8 @@ bool CFilterProcess::processInSentence(string &sInSentence, string &sOutSentence
 	vector<struNLUQA> vecNLUQAList;
 	
 	m_nluQaList.clear();
+
+	m_iDialogueCount++;
 	//调用一次nlu
 	if(!m_so_nlu.getAnswer(sInSentence, vecNLUQAList))
 		return false;
@@ -72,7 +76,10 @@ bool CFilterProcess::processInSentence(string &sInSentence, string &sOutSentence
 	retAnswer["type"] =Json::Value(m_retQA.sType);
 	retAnswer["isBreak"] =Json::Value(m_retQA.iIsBreak);
 	retAnswer["isEnd"] =Json::Value(m_retQA.iIsEnd);
-
+	retAnswer["dialogeCount"] = Json::Value(m_iDialogueCount);
+	retAnswer["currentLayer"] = Json::Value(m_iCurrentLayerId);
+	retAnswer["totalLayer"] = Json::Value(m_iTotalLayer);
+	
 	sOutSentence="";
 	sOutSentence = writer.write(retAnswer);
 
@@ -122,6 +129,7 @@ bool CFilterProcess::readFilterConfig(string sXMLPath)
 		m_vecLoginLayer.push_back(ll);
 		pLayer = pLayer->NextSiblingElement();
 	}
+	m_iTotalLayer = m_vecLoginLayer.size();
 	return !m_vecLoginLayer.empty();
 }
 
@@ -274,7 +282,9 @@ bool CFilterProcess::layerProcess()
 	{
 		return false;
 	}
-	printf("layerId=%d\n", oneFilterPtr->getLayerId());
+	//将当前层的id保存下来
+	m_iCurrentLayerId = oneFilterPtr->getLayerId();
+	printf("layerId=%d\n", m_currentLayerId);
 	
 	//得到这个过滤层可允许的qaList
 	vector<string> vecLeakList = oneFilterPtr->getLeakList();

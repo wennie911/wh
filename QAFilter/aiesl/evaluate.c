@@ -1,19 +1,20 @@
 #include <string.h>
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
+#include <esl.h>
 
 #include "nluProcess.h"
 
-char keyword_list[12][32] = {"ï¿½î¶¯", "ï¿½Å»ï¿½", "ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½", "ï¿½ï¿½Ï¢", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½", "ï¿½Â¿ï¿½"};
-char keyword_list_pingyin[12][32] = {"huo|dong", "you|hui", "e|du", "ban|li", "nian|fei", "li|xi", "shou|xu|fei", "fu|wu|fei", "zi|liao", "liu|chen", "shen|he", "xia|ka"};
+char keyword_list[1000][64] = {0};
+char keyword_list_pingyin[1000][64] = {0};
 
 struct timeval t_start;
 struct timeval t_end;
-int time_use = 0L;
+long time_use = 0L;
 int  if_match_keyword = 0;
 int  if_match_keyword_pingyin = 0;
+extern int g_customer_talk_count;
 
-extern sessionSlotStru g_sessionSlot;
 
 int match_keyword(char *words)
 {
@@ -59,43 +60,60 @@ int match_keyword_pingyin(char *pingyin)
 void evaluate_start()
 {
 	gettimeofday(&t_start, NULL);
+
+	esl_log(ESL_LOG_INFO, "evaluate_start tv_sec:%d tv_usec:%d!\n", t_start.tv_sec, t_start.tv_usec );
 }
 
 char evaluate_end()
 {
 	gettimeofday(&t_end, NULL);
 
-	time_use = (t_end.tv_sec-t_start.tv_sec)*1000000 + (t_end.tv_usec-t_start.tv_usec);//Î¢ï¿½ï¿½
+	esl_log(ESL_LOG_INFO, "evaluate_end tv_sec:%d tv_usec:%d\n!", t_end.tv_sec, t_end.tv_usec );
 
-	//ï¿½ï¿½ï¿½Ð¹Ø¼ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	if( (if_match_keyword || if_match_keyword_pingyin || g_sessionSlot.bFlowEndCGFlag || g_sessionSlot.bFlowEndSBFlag ) &&
-		!isRefusedOfDialouge(&g_sessionSlot) &&		//Ã»ï¿½Ü¾ï¿½
-		!isBusyOfDialouge(&g_sessionSlot))			//Ã»ï¿½ï¿½Ã¦
+	time_use = t_end.tv_sec - t_start.tv_sec;//Î¢Ãë
+
+	esl_log(ESL_LOG_INFO, "evaluate_end get_match_key_word:%d\n", get_match_key_word());
+	
+	//ÃüÖÐ¹Ø¼ü´Ê »ò ×ßÍêÁ÷³Ì
+	if( get_match_key_word())
+
 	{
 		return 'A';
 	}
 	else
+	
 	{
-		if( time_use >= 120000000 && getValidOfDialouge(&g_sessionSlot) > 2 )
+		/*if( isBusyOfDialouge(&g_sessionSlot) )
+		{
+			return 'E';
+		}	
+
+		if( time_use >= 120 && getValidOfDialouge(&g_sessionSlot) > 2 )
 		{
 			return 'B';
+		}
+		
+			
+			
+		if( g_customer_talk_count <= 0 || isRefusedOfDialouge(&g_sessionSlot) )
+		
+		{
+			
+			return 'D';
+		
 		}
 		
 		if( (getValidOfDialouge(&g_sessionSlot) < 3) &&  !isRefusedOfDialouge(&g_sessionSlot))
 		{
 			return 'C';
-		}
+		}*/
 
-		if( (getValidOfDialouge(&g_sessionSlot) < 1) || isRefusedOfDialouge(&g_sessionSlot) )
-		{
-			return 'D';
-		}
 	}
 
-	return 'E';
+	return 'D';
 }
 
-float GetCostTime()
+long GetCostTime()
 {
 	return time_use;
 }

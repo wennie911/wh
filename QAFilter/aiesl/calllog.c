@@ -7,7 +7,9 @@
 #include <stdio.h>  
 #include <stdlib.h>  
 #include <stdarg.h>  
-#include<ctype.h>
+#include <ctype.h>
+#include <time.h>
+#include <esl.h>
 
 #define KEYVALLEN 256  
 
@@ -68,13 +70,15 @@ int set_record_level(char *jobUUID, char level)
 	return 0;
 }
 
-int add_chat_log(char *jobUUID, char *question, char *answer)
+int add_chat_log(char *jobUUID, char *question, char *answer, const char *datetime)
 {
 	if( !flag_login_db )
 		return -2;
 
 	char sql[1024];
-	sprintf(sql, "INSERT INTO T_LOG_INFO (F_JOB_ID, F_QUESTION, F_ANSWER) VALUES (\'%s\', \'%s\', \'%s\')", jobUUID, question, answer);  
+	sprintf(sql, "INSERT INTO T_LOG_INFO (F_JOB_ID, F_QUESTION, F_ANSWER, F_DATETIME) VALUES (\'%s\', \'%s\', \'%s\', \'%s\')", jobUUID, question, answer, datetime);  
+
+	esl_log(ESL_LOG_INFO, "add_chat_log sql:%s\n", sql);
 
 	mysql_query(&mysql, "SET NAMES utf8"); 
 
@@ -106,4 +110,22 @@ int update_log_connectd(char *jobUUID)
 const char *get_calllog_error()
 {
 	return mysql_error(&mysql);
+}
+
+void get_datetime(char *sDateime)
+{
+	/*
+	char *wday[]={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+	time_t timep;
+	struct tm *p;
+	time(&timep);
+	p = gmtime(&timep);
+	*/
+
+	time_t now ;
+	struct tm *tm_now ;
+	time(&now) ;
+	tm_now = localtime(&now) ;
+
+	sprintf(sDateime, "%d-%d-%d %02d:%02d:%02d", (1900+tm_now->tm_year), (1+tm_now->tm_mon), tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
 }

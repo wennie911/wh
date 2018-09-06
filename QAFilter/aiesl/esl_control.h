@@ -17,4 +17,6 @@ void esl_play_sound(esl_handle_t *handle, char *sound_path, char *sound_file);
 
 void esl_stop_ASR(esl_handle_t *handle, char *uuid);
 
+const char *esl_get_var(esl_handle_t *handle, const char *var_name);
+
 #endif

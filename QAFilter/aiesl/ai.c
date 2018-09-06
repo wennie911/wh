@@ -116,19 +116,19 @@ int get_response_info(char *sjson, struRetAnswer *retAnswerPtr)
 		strcpy(retAnswerPtr->sType, item->valuestring);
 
 		item=cJSON_GetObjectItem(json, "isBreak"); 
-		retAnswerPtr->iIsBreak = atoi(item->valueint);
+		retAnswerPtr->iIsBreak = item->valueint;
 
 		item=cJSON_GetObjectItem(json, "isEnd"); 
-		retAnswerPtr->iIsEnd = atoi(item->valueint);
+		retAnswerPtr->iIsEnd = item->valueint;
 
 		item=cJSON_GetObjectItem(json, "dialogeCount"); 
-		retAnswerPtr->iDialogeCount = atoi(item->valueint);
+		retAnswerPtr->iDialogeCount = item->valueint;
 
 		item=cJSON_GetObjectItem(json, "currentLayer"); 
-		retAnswerPtr->iCurrentLayer = atoi(item->valueint);
+		retAnswerPtr->iCurrentLayer = item->valueint;
 
 		item=cJSON_GetObjectItem(json, "totalLayer"); 
-		retAnswerPtr->iTotalLayer = atoi(item->valueint);
+		retAnswerPtr->iTotalLayer = item->valueint;
 
 		nret = 1;
 	}

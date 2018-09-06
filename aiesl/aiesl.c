@@ -108,6 +108,12 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 			goto callback_end;
 		}
 
+		//将sAsrResponse(json)解析到words
+		dojsonlist(asrresponse, sAsrWords);
+		if(strlen(sAsrWords)<=0)
+			return 0;
+		
+
 		
 		char sDatetime[64];
 		get_datetime(sDatetime);
@@ -117,8 +123,8 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 	
 		struRetAnswer retAnswer;
 		memset(&retAnswer, 0, sizeof(struRetAnswer));
-
-		iRet = processNLU(asrresponse, &retAnswer);
+		
+		iRet = processNLU(sAsrWords, &retAnswer);
 		if( iRet )
 		{
 			if( strlen(sAsrWords) > 0 )
@@ -132,7 +138,7 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 				match_keyword_pingyin(retAnswer.sQuestionPinYin);
 
 				esl_play_break(handle);
-				esl_play_sound(handle, sound_path, sSoundName);
+				esl_play_sound(handle, sound_path, retAnswer.sAudio);
 				add_chat_log(job_UUID, retAnswer.sQuestion, retAnswer.sAnswer, sDatetime );
 			}
 
@@ -158,59 +164,6 @@ callback_end:
 	esl_log(ESL_LOG_INFO, "event_callback end!Session_status:%d\n", g_session_status);
 }
 
-static void event_callback_test(esl_handle_t *handle, esl_event_t *event, int *nByebye, int nBridege, char *tts_wave_pathname, int *bdisconnet, char *sound_path)
-{
-	esl_log(ESL_LOG_INFO, "event_callback start!");
-
-	char *application = esl_event_get_header(event, "Application");
-	char *event_name = esl_event_get_header(event, "Event-Name");
-	char *event_subclass = esl_event_get_header(event, "Event-Subclass"); 
-
-	esl_log(ESL_LOG_INFO, "Application: %s event_name: %s event_subclass: %s event_id: %d \n", application, event_name, event_subclass, event->event_id);
-
-	if( event_subclass && !strcasecmp(event_subclass, "ASR") && !nBridege )
-	{
-		char *asrresponse = esl_event_get_header(event, "ASR-Response");
-		esl_log(ESL_LOG_INFO, "ASR response: %s\n", asrresponse);
-
-		if( NULL == asrresponse )
-			return;
-
-		if( strlen(asrresponse) <= 0 )
-		{
-			esl_log(ESL_LOG_INFO, "asrresponse is null!stop!");
-			return ;
-		}
-
-		char words[MAXANSWERLEN]={0};
-		char answer[MAXANSWERLEN]={0};
-		if( ai_response_json_test(asrresponse, words, answer, sizeof(answer)) )
-		{
-			esl_log(ESL_LOG_INFO, "ASR words: %s\n", words);
-
-			esl_play_break(handle);	
-			esl_play_sound(handle, sound_path, "start.wav");
-		}
-	}
-	else if( event_subclass && !strcasecmp(event_subclass, "CALLTIMEOUT") )
-	{
-
-	}
-	else
-	{
-		if (event->event_id == ESL_EVENT_CHANNEL_EXECUTE_COMPLETE)
-		{
-
-		}
-		else if( event->event_id == ESL_EVENT_CHANNEL_DESTROY ) 
-		{
-			esl_log(ESL_LOG_INFO, "CHANNEL_DESTROY!\n");
-			*bdisconnet = 1;
-		}
-	}
-
-	esl_log(ESL_LOG_INFO, "event_callback end!\n");
-}
 
 void give_permission(char * path_or_pathname)
 {
@@ -249,23 +202,26 @@ int  create_log_dic(char *record_path, struct tm *tm_now)
 }
 
 void DialogStart(esl_handle_t *handle, char *sound_path, char *record_file_pathname, char *record_www_pathname )
-{
+{	printf("step 1\n");
 	const char *unique_id = esl_event_get_header(handle->info_event, "unique-id");
 
 	esl_record_start(handle, record_file_pathname);
-
+	printf("step 2\n");
 	if( add_record_info(unique_id, record_www_pathname) )
 	{
 		esl_log(ESL_LOG_ERROR, "add_record_info error:%s!\n", get_calllog_error());
 	}
 	update_log_connectd(unique_id);
-
+	printf("step 3\n");
 	evaluate_start();
 
 	char answer_json[1024];
 	struRetAnswer retAnswer;
 	char sDatetime[64];
 	get_datetime(sDatetime);
+
+	memset(&retAnswer, 0x0, sizeof(struRetAnswer));
+	printf("step 4\n");
 	if(ai_get_answer("开场白", &retAnswer))
 	{
 		esl_log(ESL_LOG_INFO, "开场白!%s!\n", retAnswer.sAnswer);
@@ -384,7 +340,7 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 	{
 		g_ignore_earlymedia = 1;
 		g_session_status = SESSION_START;
-		DialogStart(handle, sound_path, record_file_pathname, record_www_pathname );
+		DialogStart(&handle, sound_path, record_file_pathname, record_www_pathname );
 	}
 	else
 	{
@@ -439,7 +395,7 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 
 callback_end:
 	cEvalue = evaluate_end();
-	esl_log(ESL_LOG_INFO, "EValuate count:%d validcount:%d time:%ds  match:%d endcg:%d endsb:%d Level %c!\n", chat_count, getValidOfDialouge(&g_sessionSlot), GetCostTime(), get_match_key_word(), g_sessionSlot.bFlowEndCGFlag, g_sessionSlot.bFlowEndSBFlag, cEvalue);
+	esl_log(ESL_LOG_INFO, "EValuate count:%d time:%ds  match:%d Level %c!\n", chat_count, GetCostTime(), get_match_key_word(),  cEvalue);
 
 	set_record_level(esl_event_get_header(handle.info_event, "unique-id"), cEvalue);
 

@@ -1,3 +1,3 @@
 <root>
-  <nluso soPath = "./libnlu.so" dataPath="./dataLibs/" logLevel="3"/>
+  <nluso soPath = "../ai/libnlu.so" dataPath="../ai/dataLibs/" logLevel="3"/>
 </root>

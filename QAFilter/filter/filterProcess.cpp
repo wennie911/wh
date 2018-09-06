@@ -11,17 +11,39 @@ CFilterProcess::~CFilterProcess()
 {
 }
 
-bool CFilterProcess::init()
+bool CFilterProcess::init(string &sDllDir)
 {
 	//读取nluso配置文件
 	string sDllPath;
 	string sDataPath;
-	int iLogLevle=0;
+	string sNluSoConfigPath;
+	string sFilterConfigPath;
 	
-	if(!readNLUSoConfig("./nlusoConfig.xml", sDllPath, sDataPath, iLogLevle))
+	int iLogLevle=0;
+
+	sNluSoConfigPath = sDllDir;
+	sNluSoConfigPath += "/nlusoConfig.xml";
+
+	sFilterConfigPath = sDllDir;
+	sFilterConfigPath += "/filterConfig.xml";
+	printf("%s,%s\n", sNluSoConfigPath.c_str(), sFilterConfigPath.c_str());
+	
+	
+	if(!readNLUSoConfig(sNluSoConfigPath, sDllPath, sDataPath, iLogLevle))
 	{
 		return false;
 	}
+	string sTemp;
+	sTemp = sDllPath;
+	sDllPath = sDllDir;
+	sDllPath += sTemp;
+
+	sTemp = "";
+	sTemp = sDataPath;
+	sDataPath = sDllDir;
+	sDataPath += sTemp;
+	
+	printf("%s,%s",sDllPath.c_str(), sDataPath.c_str());
 	if(sDllPath.empty()||sDataPath.empty()|| iLogLevle==0)
 	{
 		return false;
@@ -30,7 +52,7 @@ bool CFilterProcess::init()
 	if(!m_so_nlu.LoadSo(sDllPath, sDataPath, iLogLevle))
 		return false;
 	//读取过滤器配置文件
-	if(!readFilterConfig("./filterConfig.xml"))
+	if(!readFilterConfig(sFilterConfigPath))
 	{
 		return false;
 	}
@@ -284,7 +306,7 @@ bool CFilterProcess::layerProcess()
 	}
 	//将当前层的id保存下来
 	m_iCurrentLayerId = oneFilterPtr->getLayerId();
-	printf("layerId=%d\n", m_currentLayerId);
+	printf("layerId=%d\n", m_iCurrentLayerId);
 	
 	//得到这个过滤层可允许的qaList
 	vector<string> vecLeakList = oneFilterPtr->getLeakList();

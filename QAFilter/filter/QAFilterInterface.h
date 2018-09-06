@@ -11,7 +11,7 @@ zcq
 
 
 extern "C" {
-	int qaf_init();
+	int qaf_init(const char *sDllDir);
 
 	//输入question 返回answer和answer的声音文件 json
 	int qaf_get_answer(const char *in_sentence, char *out_sentence, int out_sentence_size);

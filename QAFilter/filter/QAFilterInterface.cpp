@@ -5,10 +5,12 @@
 
 CFilterProcess g_cFilterProcess;
 
-int qaf_init()
+int qaf_init(const char *sDllDir)
 {
-	g_cFilterProcess.init();
-	return 1;
+	string sDT;
+	sDT = sDllDir;
+	return g_cFilterProcess.init(sDT);
+	
 }
 
 //输入question 返回answer和answer的声音文件

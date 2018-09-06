@@ -20,7 +20,7 @@ class CFilterProcess
 		~CFilterProcess();
 
 	public:
-		bool init();
+		bool init(string &sDllDir);
 		bool processInSentence(string &sInSentence, string &sOutSentence );
 
 	private:

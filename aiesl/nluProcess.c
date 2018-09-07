@@ -27,7 +27,7 @@ int processNLU(char *sAsrResponse, struRetAnswer *retAnswerPtr)
 	//	return 0;
 
 	//调用nul 获得回答的结构
-	return ai_get_answer(words, retAnswerPtr);
+	return ai_get_answer(sAsrResponse, retAnswerPtr);
 
 }
 
@@ -38,14 +38,6 @@ char getSessionStat(struRetAnswer *retAnswerPtr)
 	{
 		return 'A';
 	}
-	if(retAnswerPtr->iDialogeCount>3 )
-	{
-		return 'B';
-	}
-	if(retAnswerPtr->iDialogeCount<=3 || retAnswerPtr->iCurrentLayer<3)
-	{
-		return 'C';
-	}
 	if(strcmp(retAnswerPtr->sType,"B")==0)
 	{
 		return 'D';
@@ -54,6 +46,15 @@ char getSessionStat(struRetAnswer *retAnswerPtr)
 	{
 		return 'E';
 	}
+	if(retAnswerPtr->iDialogeCount>3 )
+	{
+		return 'B';
+	}
+	if(retAnswerPtr->iDialogeCount<=3 || retAnswerPtr->iCurrentLayer<3)
+	{
+		return 'C';
+	}
+	
 	if(retAnswerPtr->iCurrentLayer == retAnswerPtr->iTotalLayer)
 	{
 		return 'B';

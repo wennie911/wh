@@ -75,7 +75,7 @@ int ai_initialize(const char *module_pathname, const char *work_dir)
 		return 0;
 
 	//从文件里取需要匹配的关键词
-	getKeyWordsFile("./keyword.txt");
+	getKeyWordsFile(work_dir);
 
 	return 1;
 }
@@ -255,8 +255,13 @@ int write_callback(void *ptr, size_t size, size_t num, void *usr_data)
 
 
 //读取关键字文件
-int getKeyWordsFile(char *sFilename)
+int getKeyWordsFile(char *sKeyWordDir)
 {
+	char sFilename[100]={0};
+	strcat(sFilename,sKeyWordDir);
+	strcat(sFilename,"/keyword.txt");
+
+	printf("getKeyWordsFile keyword path=%s\n", sFilename);
 	FILE *fp = fopen(sFilename, "r");
 	char sBuf[MAXANSWERLEN];
 	int iLen=0;

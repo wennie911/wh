@@ -12,7 +12,7 @@
 extern char keyword_list[100][32];
 extern char keyword_list_pingyin[100][32];
 
-typedef int (*qaf_init)();
+typedef int (*qaf_init)(const char *);
 typedef int (*qaf_get_answer)(const char *, char *, const int);
 
 static void *ai_handle = NULL;
@@ -38,7 +38,7 @@ const char *ai_get_info()
 
 int load_ai_module(const char *module_pathname)
 {
-	ai_handle = dlopen("/usr/local/src/ai/libfilter.so", RTLD_NOW);
+	ai_handle = dlopen(module_pathname, RTLD_NOW);
 	if( NULL == ai_handle )
 	{
 		sprintf(printbuf, "Load ai module error! %s!\n", dlerror());
@@ -71,7 +71,7 @@ int ai_initialize(const char *module_pathname, const char *work_dir)
 		return 0;
 
 
-	if( !func_ai_init() )
+	if( !func_ai_init(work_dir) )
 		return 0;
 
 	//从文件里取需要匹配的关键词
@@ -93,7 +93,7 @@ int get_response_info(char *sjson, struRetAnswer *retAnswerPtr)
 {
 	cJSON *json;
 	int nret = 0;
-
+	printf("get_response_info sJson=%s\n",sjson);
 	json = cJSON_Parse(sjson);
 	if (json)
 	{
@@ -129,7 +129,7 @@ int get_response_info(char *sjson, struRetAnswer *retAnswerPtr)
 
 		item=cJSON_GetObjectItem(json, "totalLayer"); 
 		retAnswerPtr->iTotalLayer = item->valueint;
-
+		printf("sAudio=%s\n", retAnswerPtr->sAudio);
 		nret = 1;
 	}
 

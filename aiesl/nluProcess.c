@@ -22,9 +22,9 @@ int processNLU(char *sAsrResponse, struRetAnswer *retAnswerPtr)
 	char answer_json[MAXANSWERLEN]={0};
 
 	//将sAsrResponse(json)解析到words
-	dojsonlist(sAsrResponse, words);
-	if(strlen(words)<=0)
-		return 0;
+    //dojsonlist(sAsrResponse, words);
+	//if(strlen(words)<=0)
+	//	return 0;
 
 	//调用nul 获得回答的结构
 	return ai_get_answer(words, retAnswerPtr);
@@ -34,11 +34,11 @@ int processNLU(char *sAsrResponse, struRetAnswer *retAnswerPtr)
 //A 成功 B 有意愿 C兴趣不大 D明确拒绝 E当前忙碌
 char getSessionStat(struRetAnswer *retAnswerPtr)
 {
-	if(retAnswerPtr->iCurrentLayer == retAnswerPtr->iTotalLayer)
+	if(strcmp(retAnswerPtr->sType,"A")==0)
 	{
 		return 'A';
 	}
-	if(retAnswerPtr->iDialogeCount>3)
+	if(retAnswerPtr->iDialogeCount>3 )
 	{
 		return 'B';
 	}
@@ -53,6 +53,10 @@ char getSessionStat(struRetAnswer *retAnswerPtr)
 	if(strcmp(retAnswerPtr->sType,"I")==0)
 	{
 		return 'E';
+	}
+	if(retAnswerPtr->iCurrentLayer == retAnswerPtr->iTotalLayer)
+	{
+		return 'B';
 	}
 	return 'B';
 }

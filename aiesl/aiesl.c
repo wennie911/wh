@@ -25,6 +25,7 @@ static int chat_end = 0;
 int	g_customer_talk_count = 0;
 int g_ignore_earlymedia = 0;
 #define CONF_FILE_PATH  "/etc/freeswitch/system.conf"
+extern struRetAnswer g_retAnswer;
 
 typedef enum {
 	SESSION_INIT,				//初始化
@@ -48,12 +49,13 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 
 	esl_log(ESL_LOG_INFO, "JobID:%s event_callback Application: %s event_name: %s event_subclass: %s event_id: %d \n", job_UUID, application, event_name, event_subclass, event->event_id);
 
-
+	/*
 	if( event->event_id == ESL_EVENT_CHANNEL_HANGUP)
 	{
 		*nDisconnet = 1;
 		goto callback_end;
 	}
+	*/
 
 	//被叫摘机
 	if( event->event_id == ESL_EVENT_CHANNEL_ANSWER &&  SESSION_WAIT_ANSWER == g_session_status )
@@ -104,45 +106,40 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 			if( strlen(sAsrWords) > 0 )
 				g_customer_talk_count ++;
 
-			esl_log(ESL_LOG_INFO, "Not reach continue status! Return!  \n", esl_event_get_header(event, "palybacksound"));			
+			esl_log(ESL_LOG_INFO, "Not reach continue status! Return!  \n");			
 			goto callback_end;
 		}
 
 		//将sAsrResponse(json)解析到words
 		dojsonlist(asrresponse, sAsrWords);
 		if(strlen(sAsrWords)<=0)
-			return 0;
-		
-
+			goto callback_end;
 		
 		char sDatetime[64];
 		get_datetime(sDatetime);
-		
+
 		int iRet=0;
 		char sSoundName[MAXANSWERLEN] = {0};
-	
-		struRetAnswer retAnswer;
-		memset(&retAnswer, 0, sizeof(struRetAnswer));
-		
-		iRet = processNLU(sAsrWords, &retAnswer);
+		memset(&g_retAnswer, 0, sizeof(struRetAnswer));
+		iRet = processNLU(sAsrWords, &g_retAnswer);
 		if( iRet )
 		{
 			if( strlen(sAsrWords) > 0 )
 				g_customer_talk_count ++;
 
-			if( strlen(retAnswer.sAudio) )
+			if( strlen(g_retAnswer.sAudio) )
 			{
-				esl_log(ESL_LOG_INFO,"words:%s NluResponse:%s sSoundPath=%s, sSoundName=%s", retAnswer.sQuestion, retAnswer.sAnswer, sound_path, retAnswer.sAudio);
+				esl_log(ESL_LOG_INFO,"words:%s NluResponse:%s sSoundPath=%s, sSoundName=%s", g_retAnswer.sQuestion, g_retAnswer.sAnswer, sound_path, g_retAnswer.sAudio);
 
-				match_keyword(retAnswer.sQuestion);
-				match_keyword_pingyin(retAnswer.sQuestionPinYin);
+				match_keyword(g_retAnswer.sQuestion);
+				match_keyword_pingyin(g_retAnswer.sQuestionPinYin);
 
 				esl_play_break(handle);
-				esl_play_sound(handle, sound_path, retAnswer.sAudio);
-				add_chat_log(job_UUID, retAnswer.sQuestion, retAnswer.sAnswer, sDatetime );
+				esl_play_sound(handle, sound_path, g_retAnswer.sAudio);
+				add_chat_log(job_UUID, g_retAnswer.sQuestion, g_retAnswer.sAnswer, sDatetime );
 			}
 
-			if(retAnswer.iIsEnd)
+			if(g_retAnswer.iIsEnd)
 			{
 				*nDisconnet=1;
 				chat_end = 1;
@@ -154,6 +151,7 @@ static void event_callback(esl_handle_t *handle, esl_event_t *event, char *sound
 	else if( event_subclass && !strcasecmp(event_subclass, "CALLTIMEOUT") )
 	{
 		*nDisconnet = 1;
+		goto callback_end;
 	}
 	else
 	{
@@ -202,7 +200,10 @@ int  create_log_dic(char *record_path, struct tm *tm_now)
 }
 
 void DialogStart(esl_handle_t *handle, char *sound_path, char *record_file_pathname, char *record_www_pathname )
-{	printf("step 1\n");
+{	
+	evaluate_start();
+
+	printf("step 1\n");
 	const char *unique_id = esl_event_get_header(handle->info_event, "unique-id");
 
 	esl_record_start(handle, record_file_pathname);
@@ -213,7 +214,6 @@ void DialogStart(esl_handle_t *handle, char *sound_path, char *record_file_pathn
 	}
 	update_log_connectd(unique_id);
 	printf("step 3\n");
-	evaluate_start();
 
 	char answer_json[1024];
 	struRetAnswer retAnswer;
@@ -242,6 +242,7 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 {
 	esl_handle_t handle = {{0}};
 	esl_status_t status;
+	int hungup_reason = 2;
 
 	//多进程方式
 	if (fork()) 
@@ -272,12 +273,16 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 	char record_www_pathname[1024];
 	char sound_path[1024];
 	char record_path[1024] = {0};
+	char runtime_path[1024] = {0};
 
 	//load record and soud profile
 	GetProfileString(CONF_FILE_PATH, "fs" ,"record", record_path);
 	GetProfileString(CONF_FILE_PATH, "fs" ,"sound", sound_path);
+	sprintf(sound_path, "%s/%s", sound_path, esl_get_var(&handle, "AI-Sound"));
+	GetProfileString(CONF_FILE_PATH, "fs" ,"runtime", runtime_path);
 	esl_log(ESL_LOG_INFO, "record path: %s\n", record_path);
 	esl_log(ESL_LOG_INFO, "sound path: %s\n", sound_path);
+	esl_log(ESL_LOG_INFO, "runtime path: %s\n", runtime_path);
 
 	time_t now;
 	struct tm *tm_now;
@@ -285,7 +290,7 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 	tm_now = localtime(&now);
 	create_log_dic(record_path, tm_now);
 	sprintf(record_file_path, "%s/record/%04d%02d%02d/", record_path,  tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday);
-	sprintf(record_file_pathname, "/%s/%s", record_file_path, unique_id);
+	sprintf(record_file_pathname, "%s/%s", record_file_path, unique_id);
 	sprintf(record_www_pathname, "./record/%04d%02d%02d/%s.wav", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, unique_id);
 	esl_log(ESL_LOG_INFO, "record_file_path: %s!\n", record_file_path);
 	esl_log(ESL_LOG_INFO, "record_file_pathname: %s!\n", record_file_pathname);
@@ -297,14 +302,14 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 	char ai_env[1024];
 	char sys_usr[32];
 	char ignore_earlymedia[32];
-	sprintf(ai_core, "%s", esl_get_var(&handle, "AI-Core"));
-	sprintf(ai_env, "%s", esl_get_var(&handle, "AI-Env"));
+	sprintf(ai_core, "%s/%s/libfilter.so", runtime_path, esl_get_var(&handle, "AI-Core"));
+	sprintf(ai_env, "%s/%s/", runtime_path,  esl_get_var(&handle, "AI-Env"));
 	sprintf(sys_usr, "%s", esl_get_var(&handle, "Sys-Usr"));
 	sprintf(ignore_earlymedia, "%s", esl_get_var(&handle, "Ignore-Earlymedia"));
-	esl_log(ESL_LOG_INFO, "JobId:%s AI-Core %s!\n", unique_id, ai_core);
-	esl_log(ESL_LOG_INFO, "JobId:%s ai_env %s!\n", ai_env);
-	esl_log(ESL_LOG_INFO, "JobId:%s AI-Core %s!\n", sys_usr);
-	esl_log(ESL_LOG_INFO, "JobId:%s ai_env %s!\n", ignore_earlymedia);
+	esl_log(ESL_LOG_INFO, "JobId:%s AI-Core:%s!\n", unique_id, ai_core);
+	esl_log(ESL_LOG_INFO, "JobId:%s AI-Env:%s!\n", unique_id, ai_env);
+	esl_log(ESL_LOG_INFO, "JobId:%s Sys-Usr:%s!\n", unique_id, sys_usr);
+	esl_log(ESL_LOG_INFO, "JobId:%s Ignore-Earlymedia:%s!\n", unique_id, ignore_earlymedia);
 	//if( !ai_initialize("/usr/local/src/ai/libnlu.so", "/usr/local/src/ai/dataLibs/") )
 	if( !ai_initialize(ai_core, ai_env) )
 	{
@@ -355,12 +360,6 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 	{
 		if( (status = esl_recv_timed(&handle, 1000)) == ESL_SUCCESS )
 		{
-			if( nDisconnect )
-			{
-				g_session_status = SESSION_STOP;
-				goto callback_end;
-			}
-
 			if( handle.last_event )
 			{
 				const char *application = esl_event_get_header(handle.last_event, "Application");
@@ -377,7 +376,11 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 						if( !nDisconnect )
 						{
 							event_callback(&handle, handle.last_ievent, sound_path, record_file_pathname, record_www_pathname, &nDisconnect);
-							//event_callback_test(&handle, handle.last_ievent, &nByebye, nBridge, tts_wave_pathname, &disconnect, sound_path);
+							if( nDisconnect )
+							{
+								g_session_status = SESSION_STOP;
+								goto callback_end;
+							}
 						}
 						else
 						{
@@ -395,9 +398,13 @@ static void charge_callback(esl_socket_t server_sock, esl_socket_t client_sock, 
 
 callback_end:
 	cEvalue = evaluate_end();
-	esl_log(ESL_LOG_INFO, "EValuate count:%d time:%ds  match:%d Level %c!\n", chat_count, GetCostTime(), get_match_key_word(),  cEvalue);
+	esl_log(ESL_LOG_INFO, "EValuate count:%d time:%ld match:%d Level %c!\n", chat_count, GetCostTime(), get_match_key_word(),  cEvalue);
 
-	set_record_level(esl_event_get_header(handle.info_event, "unique-id"), cEvalue);
+	if( nDisconnect == 1 )
+		hungup_reason = 1;
+	set_chat_hungup_info(esl_event_get_header(handle.info_event, "unique-id"), hungup_reason, GetCostTime(), cEvalue);
+
+	//set_record_level(esl_event_get_header(handle.info_event, "unique-id"), cEvalue);
 
 	tts_uninit();
 	ai_uninit();

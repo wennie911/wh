@@ -6,6 +6,6 @@ int match_keyword_pingyin(char *pingyin);
 void evaluate_start();
 char evaluate_end();
 int get_match_key_word();
-float GetCostTime();
+time_t GetCostTime();
 
 #endif

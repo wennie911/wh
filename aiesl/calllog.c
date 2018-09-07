@@ -90,6 +90,24 @@ int add_chat_log(char *jobUUID, char *question, char *answer, const char *dateti
 	return 0;
 }
 
+int set_chat_hungup_info(char *jobUUID, int hungup_reason, time_t during_time, char level)
+{
+	if( !flag_login_db )
+		return -2;
+
+	char sql[1024];
+	sprintf(sql, "UPDATE T_CALLING_LOG SET F_HUNGUP_RAESON = %d, F_DURING_TIME =%ld, F_EVALUEATE = \'%c'\ WHERE F_JOB_ID = \'%s\'", hungup_reason, during_time, level, jobUUID);  
+
+	esl_log(ESL_LOG_INFO, "set_chat_hungup_info sql:%s\n", sql);
+
+	if( mysql_real_query(&mysql, sql, strlen(sql)) )
+	{
+		return -1; 
+	}
+
+	return 0;
+}
+
 int update_log_connectd(char *jobUUID)
 {
 	if( !flag_login_db )

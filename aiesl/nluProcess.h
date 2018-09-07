@@ -23,6 +23,7 @@ typedef struct _struRetAnswer
 	char sQuestionPinYin[MAXANSWERLEN*2];
 }struRetAnswer;
 
+struRetAnswer g_retAnswer;
 //处理nlu 返回nlu的处理结果
 int processNLU(char *sAsrResponse, struRetAnswer *retAnswerPtr);
 char getSessionStat(struRetAnswer *retAnswerPtr);

@@ -10,11 +10,13 @@ char keyword_list_pingyin[1000][64] = {0};
 
 struct timeval t_start;
 struct timeval t_end;
-long time_use = 0L;
+struct timespec tpstart;
+struct timespec tpend;
+time_t time_use = 0L;
 int  if_match_keyword = 0;
 int  if_match_keyword_pingyin = 0;
 extern int g_customer_talk_count;
-
+struRetAnswer retAnswer;
 
 int match_keyword(char *words)
 {
@@ -60,6 +62,7 @@ int match_keyword_pingyin(char *pingyin)
 void evaluate_start()
 {
 	gettimeofday(&t_start, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &tpstart);
 
 	esl_log(ESL_LOG_INFO, "evaluate_start tv_sec:%d tv_usec:%d!\n", t_start.tv_sec, t_start.tv_usec );
 }
@@ -67,14 +70,15 @@ void evaluate_start()
 char evaluate_end()
 {
 	gettimeofday(&t_end, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &tpend);
 
 	esl_log(ESL_LOG_INFO, "evaluate_end tv_sec:%d tv_usec:%d\n!", t_end.tv_sec, t_end.tv_usec );
 
-	time_use = t_end.tv_sec - t_start.tv_sec;//微秒
+	time_use = t_end.tv_sec - t_start.tv_sec;
+	//time_use = tpend.tv_sec - tpstart.tv_sec;
 
 	esl_log(ESL_LOG_INFO, "evaluate_end get_match_key_word:%d\n", get_match_key_word());
 	
-	//命中关键词 或 走完流程
 	if( get_match_key_word())
 
 	{
@@ -83,6 +87,7 @@ char evaluate_end()
 	else
 	
 	{
+		return getSessionStat(&g_retAnswer);
 		/*if( isBusyOfDialouge(&g_sessionSlot) )
 		{
 			return 'E';
@@ -113,7 +118,7 @@ char evaluate_end()
 	return 'D';
 }
 
-long GetCostTime()
+time_t GetCostTime()
 {
 	return time_use;
 }

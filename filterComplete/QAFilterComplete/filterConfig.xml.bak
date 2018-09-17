@@ -1,0 +1,6 @@
+<root>
+	<layer id="1" leakList="M" initiative="0" defDenyQuestion="" defQuestion="" defWhenQ="when" defWhereQ="" defWhoQ="" defHowQ="" defWhatQ="" defWhichQ="" defWhyQ=""/>
+	<layer id="2" leakList="B|C|D|I" initiative="0" defDenyQ="结束失败" defQ="兜底一" defWhenQ="when" defWhereQ="where" defWhoQ="who" defHowQ="how" defWhatQ="what" defWhichQ="what" defWhyQ="why"/>
+	<layer id="3" leakList="C|D|I" initiative="0" defDenyQ="结束失败" defQ="兜底二"  defWhenQ="when" defWhereQ="where" defWhoQ="who" defHowQ="how" defWhatQ="what" defWhichQ="what" defWhyQ="why"/>
+	<layer id="4" leakList="C|D" initiative="0" defDenyQ="邀约失败" defQ="结束成功"  defWhenQ="when" defWhereQ="where" defWhoQ="who" defHowQ="how" defWhatQ="what" defWhichQ="what" defWhyQ="why"/>
+</root>

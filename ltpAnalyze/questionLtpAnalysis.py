@@ -11,7 +11,7 @@ import xlwt
 def readExecl(execlpath):
     # 读取 打开工作簿
     workbook = xlrd.open_workbook(execlpath)
-    questionList=[]
+    questionList={}
     # 获取sheet 取得工作簿的第一个表名
     sheet_name = workbook.sheet_names()[0]
 
@@ -25,9 +25,9 @@ def readExecl(execlpath):
     for i in range(sheet.nrows):
         temp = sheet.row_values(i)
         print(temp[0])
-        if len(temp[0])<=0:
+        if temp[0]<=0:
             break
-        questionList[temp[0]] = temp[1]
+        questionList[int(temp[0])] = temp[1]
         return questionList
         #print(temp[0])
     return questionList
@@ -43,27 +43,27 @@ def writeExecl(ExeclPath,QuestionList, AnswerList):
             sTemp=''
             for zyxs in oneAnswer['zyxs']:
                 sTemp += zyxs
-            sheet.write(rowCount, 1, values)
+            sheet.write(rowCount, 1, sTemp)
             sTemp = ''
             for zy in oneAnswer['zy']:
-                sTemp += zyxs
-            sheet.write(rowCount, 2, values)
+                sTemp += zy
+            sheet.write(rowCount, 2, sTemp)
             sTemp = ''
-            for zyxs in oneAnswer['wyxs']:
-                sTemp += zyxs
-            sheet.write(rowCount, 3, values)
+            for wyxs in oneAnswer['wyxs']:
+                sTemp += wyxs
+            sheet.write(rowCount, 3, sTemp)
             sTemp = ''
             for wy in oneAnswer['wy']:
-                sTemp += zyxs
-            sheet.write(rowCount, 4, values)
+                sTemp += wy
+            sheet.write(rowCount, 4, sTemp)
             sTemp = ''
-            for zyxs in oneAnswer['byxs']:
-                sTemp += zyxs
-            sheet.write(rowCount, 5, values)
+            for byxs in oneAnswer['byxs']:
+                sTemp += byxs
+            sheet.write(rowCount, 5, sTemp)
             sTemp = ''
             for by in oneAnswer['by']:
-                sTemp += zyxs
-            sheet.write(rowCount, 6, values)
+                sTemp += by
+            sheet.write(rowCount, 6, sTemp)
             rowCount +=1
     workbook.save(ExeclPath)
 
@@ -91,7 +91,7 @@ def mainLoop(execlPath, channel):
                 sortL = ltpA.sortLtp(ana)
                 ltpzwb.append(sortL)
         answerList[key] = ltpzwb
-
+    writeExecl('xx.xls', questionList, answerList)
     return
 
 

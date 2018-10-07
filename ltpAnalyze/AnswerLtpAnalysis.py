@@ -1,6 +1,6 @@
 #coding:utf-8
 
-import os, sys, string, copy
+import os, sys, string, copy, re
 from ltpProcess import CLTPrequest
 from ltpProcess import CLTPparse
 from ltpProcess import  CLTPanalyze
@@ -27,10 +27,23 @@ def readExecl(execlpath):
         print(temp[0])
         if temp[0]<=0:
             break
-        questionList[int(temp[0])] = temp[1]
+
+        subSentence = splitSentence(temp[2])
+        questionList[int(temp[0])] = subSentence
         #return questionList
-        print(temp[1])
+
     return questionList
+
+#把长句分解成短句 换行 句号
+def splitSentence(sentence):
+    ts=re.split('[\n\r。]', sentence)
+    subSentence=[]
+    for ots in ts:
+        if not len(ots.strip()):
+            continue
+        subSentence.append(ots)
+    print(subSentence)
+    return subSentence
 
 def writeExecl(ExeclPath,QuestionList, AnswerList):
     workbook = xlwt.Workbook()
@@ -40,34 +53,35 @@ def writeExecl(ExeclPath,QuestionList, AnswerList):
     for key, values in QuestionList.items():
         sheet.write(rowCount, 0, key)
         sheet.write(rowCount, 1, values)
-        for oneAnswer in AnswerList[key]:
+        oneAnswer = AnswerList[key]
+        for oneA in oneAnswer:
             sTemp=''
-            for zyxs in oneAnswer['zyxs']:
+            for zyxs in oneA['zyxs']:
                 sTemp += zyxs
                 sTemp += '|'
             sheet.write(rowCount, 2, sTemp)
             sTemp = ''
-            for zy in oneAnswer['zy']:
+            for zy in oneA['zy']:
                 sTemp += zy
                 sTemp += '|'
             sheet.write(rowCount, 3, sTemp)
             sTemp = ''
-            for wyxs in oneAnswer['wyxs']:
+            for wyxs in oneA['wyxs']:
                 sTemp += wyxs
                 sTemp += '|'
             sheet.write(rowCount, 4, sTemp)
             sTemp = ''
-            for wy in oneAnswer['wy']:
+            for wy in oneA['wy']:
                 sTemp += wy
                 sTemp += '|'
             sheet.write(rowCount, 5, sTemp)
             sTemp = ''
-            for byxs in oneAnswer['byxs']:
+            for byxs in oneA['byxs']:
                 sTemp += byxs
                 sTemp += '|'
             sheet.write(rowCount, 6, sTemp)
             sTemp = ''
-            for by in oneAnswer['by']:
+            for by in oneA['by']:
                 sTemp += by
                 sTemp += '|'
             sheet.write(rowCount, 7, sTemp)
@@ -83,22 +97,28 @@ def mainLoop(execlPath, channel):
 
     ltpR = CLTPrequest(channel)
     for key,value in questionList.items():
-        retJson = ltpR.getLTPresult(value)
-        if not len(retJson):
-            continue
-        ltpJ = CLTPparse()
-        AltpList = ltpJ.getLTPList(retJson)
-        if not len(AltpList):
-            return
-        ltpzwb=[]
-        for oneList in AltpList:
-            ltpA = CLTPanalyze(oneList)
-            analyseList = ltpA.getAllClause()
-            for ana in analyseList:
-                sortL = ltpA.sortLtp(ana)
-                ltpzwb.append(sortL)
+        print('row=',key)
+        print('value=',value)
+        ltpzwb = []
+        for oneV in value:
+            retJson = ltpR.getLTPresult(oneV)
+            if not len(retJson):
+                continue
+            ltpJ = CLTPparse()
+            AltpList = ltpJ.getLTPList(retJson)
+            if not len(AltpList):
+                return
+            for oneList in AltpList:
+                ltpA = CLTPanalyze(oneList)
+                analyseList = ltpA.getAllClause()
+                for ana in analyseList:
+                    sortL = ltpA.sortLtp(ana)
+                    ltpzwb.append(sortL)
         answerList[key] = ltpzwb
-    writeExecl('xx.xls', questionList, answerList)
+
+    #print(answerList)
+
+    writeExecl('yy.xls', questionList, answerList)
     return
 
 

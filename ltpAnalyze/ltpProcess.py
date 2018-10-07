@@ -37,7 +37,7 @@ class CLTPrequest(object):
         if not len(self.api_key):
             return False;
         self.ltpRet=''
-
+        print('requestLtpOnline',sentence)
         ssl._create_default_https_context = ssl._create_unverified_context
         args = {
             'api_key':self.api_key,

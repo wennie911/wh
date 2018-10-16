@@ -38,14 +38,6 @@ char getSessionStat(struRetAnswer *retAnswerPtr)
 	{
 		return 'A';
 	}
-	if(strcmp(retAnswerPtr->sType,"B")==0)
-	{
-		return 'D';
-	}
-	if(strcmp(retAnswerPtr->sType,"I")==0)
-	{
-		return 'E';
-	}
 	if(retAnswerPtr->iDialogeCount>3 )
 	{
 		return 'B';
@@ -54,7 +46,14 @@ char getSessionStat(struRetAnswer *retAnswerPtr)
 	{
 		return 'C';
 	}
-	
+	if(strcmp(retAnswerPtr->sType,"B")==0)
+	{
+		return 'D';
+	}
+	if(strcmp(retAnswerPtr->sType,"I")==0)
+	{
+		return 'E';
+	}
 	if(retAnswerPtr->iCurrentLayer == retAnswerPtr->iTotalLayer)
 	{
 		return 'B';

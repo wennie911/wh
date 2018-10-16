@@ -75,7 +75,7 @@ int ai_initialize(const char *module_pathname, const char *work_dir)
 		return 0;
 
 	//从文件里取需要匹配的关键词
-	getKeyWordsFile(work_dir);
+	getKeyWordsFile("./keyword.txt");
 
 	return 1;
 }
@@ -111,6 +111,9 @@ int get_response_info(char *sjson, struRetAnswer *retAnswerPtr)
 
 		item=cJSON_GetObjectItem(json, "questionPinYin"); 
 		strcpy(retAnswerPtr->sQuestionPinYin, item->valuestring);
+
+		item=cJSON_GetObjectItem(json, "questionType"); 
+		strcpy(retAnswerPtr->sQuestionType, item->valuestring);
 
 		item=cJSON_GetObjectItem(json, "type"); 
 		strcpy(retAnswerPtr->sType, item->valuestring);
@@ -175,74 +178,22 @@ void dojson(cJSON *json, char *text)
 	}
 }
 
+//{"code":"0","data":"你喜欢吃饭吗？","desc":"success","sid":"zat001b8651@ch7a1f0ee2aa44477600"}
 void dojsonlist(const char *text, char *words)
 {
-	char *out;
-	cJSON *json;
-
-	char* delim = "{\"sn\":";		//分隔符字符串
-	char *p_reserve1 = NULL, *p_reserve2 = NULL;
-	int len = 0;
-	char *ajson = NULL;
-	char *sub = NULL;
-	int left_len = strlen(text);
-	char* p = strstr(text, delim);	
-	memset(words, '\0', sizeof(words));
-
-	while(	p != NULL )
+	cJSON *root;
+	root = cJSON_Parse(text);
+	if (root)
 	{
-		p_reserve1 = p;
-		sub = text + (p - text) + 6;
-		p = strstr(sub, delim);	
-		p_reserve2 = p;
-
-		if ( p_reserve2 != NULL && p_reserve1 != p_reserve2 )
+		cJSON *data = cJSON_GetObjectItem(root, "data");
+		if( data )
 		{
-			len = p_reserve2 - p_reserve1;
-			ajson = (char*)malloc(len + 1);
-			memset(ajson, '\0', len + 1);
-			text += len;
-			left_len -= len;
-			strncpy(ajson, p_reserve1, len);
-
-			json = cJSON_Parse(ajson);
-			if (!json)
-			{
-				set_tts_error("Parse json Error before: [%s]\n", cJSON_GetErrorPtr());
-			}
-			else
-			{
-				dojson(json, words);
-				cJSON_Delete(json);
-			}
-
-			free(ajson);
-		}
-	}
-
-	if( text != NULL )
-	{
-		ajson = (char*)malloc(left_len + 1);
-		memset(ajson, '\0', left_len + 1);
-		strncpy(ajson, text, left_len);
-
-		json = cJSON_Parse(text);
-		if (!json)
-		{
-			set_tts_error("Parse json Error before: [%s]\n", cJSON_GetErrorPtr());
-		}
-		else
-		{
-			dojson(json, words);
-			cJSON_Delete(json);
+			strcpy(words, data->valuestring);
 		}
 
-		free(ajson);
+		cJSON_Delete(root);
 	}
 }
-
-
-
 
 int write_callback(void *ptr, size_t size, size_t num, void *usr_data)
 {
@@ -255,13 +206,8 @@ int write_callback(void *ptr, size_t size, size_t num, void *usr_data)
 
 
 //读取关键字文件
-int getKeyWordsFile(char *sKeyWordDir)
+int getKeyWordsFile(char *sFilename)
 {
-	char sFilename[100]={0};
-	strcat(sFilename,sKeyWordDir);
-	strcat(sFilename,"/keyword.txt");
-
-	printf("getKeyWordsFile keyword path=%s\n", sFilename);
 	FILE *fp = fopen(sFilename, "r");
 	char sBuf[MAXANSWERLEN];
 	int iLen=0;

@@ -45,7 +45,6 @@ int add_record_info(char *jobUUID, char *log_filepathname)
 
 	char sql[1024];	
 	sprintf(sql, "UPDATE T_CALLING_LOG SET F_RECORD = \'%s'\ WHERE F_JOB_ID = \'%s\'", log_filepathname, jobUUID);
-
 	if( mysql_real_query(&mysql, sql, strlen(sql)) )
 	{
 		return -1; 
@@ -61,7 +60,6 @@ int set_record_level(char *jobUUID, char level)
 
 	char sql[1024];	
 	sprintf(sql, "UPDATE T_CALLING_LOG SET F_EVALUEATE = \'%c'\ WHERE F_JOB_ID = \'%s\'", level, jobUUID);
-
 	if( mysql_real_query(&mysql, sql, strlen(sql)) )
 	{
 		return -1; 

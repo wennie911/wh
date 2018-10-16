@@ -21,6 +21,7 @@ typedef struct _struRetAnswer
 	char sAudio[MAXANSWERLEN];
 	char sType[MAXANSWERLEN];
 	char sQuestionPinYin[MAXANSWERLEN*2];
+	char sQuestionType[MAXANSWERLEN];
 }struRetAnswer;
 
 struRetAnswer g_retAnswer;

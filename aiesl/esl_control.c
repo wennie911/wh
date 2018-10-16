@@ -97,7 +97,7 @@ const char *esl_get_var(esl_handle_t *handle, const char *var_name)
 	esl_log(ESL_LOG_INFO, "esl_get_var cmd:%s!\n", cmd);
 	esl_send_recv(handle, cmd);
 
-	esl_log(ESL_LOG_INFO, "esl_get_var end£¡rst:%s  !\n", handle->last_sr_event->body);
+	esl_log(ESL_LOG_INFO, "esl_get_var end!rst:%s!\n", handle->last_sr_event->body);
 
 	return handle->last_sr_event->body;
 }

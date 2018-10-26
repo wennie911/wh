@@ -447,7 +447,7 @@ bool CFilterProcess::layerProcess()
 
 				if(sDefQuestionW.size()==0)
 					continue;
-				printf("5W qustionType=%s, sDefQuestionW=%s\n", sQuestionType.c_str(), sDefQuestionW.c_str());
+				printf("qustionType=%s, sDefQuestionW=%s\n", sQuestionType.c_str(), sDefQuestionW.c_str());
 				//调用一次nlu 把缺省的问题发一遍
 				vector<struNLUQA> vecNLUQAListT;
 				vector<struNLUQA>::iterator iterQA;
